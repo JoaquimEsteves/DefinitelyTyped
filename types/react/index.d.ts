@@ -551,6 +551,53 @@ declare namespace React {
         displayName?: string;
     }
 
+    /** Convenient shorthand for declaring a function component that can't contain children 
+     *  Usage:
+     *  ```javascript
+     * // Errors out if foo is not a string
+     * let Foo: CFC<{ foo: string }> = ({foo}) => <div>{foo}</div>;
+     * // props is of type PropsWithNoChildren which expands to: { foo: string } & {children?: never}
+     * let Foo: CFC<{ foo: string }> = (props) => <div>{props.foo}</div>;
+     *  ```
+     */
+    type CFC<P = {}> = ChildlessFunctionComponent<P>;
+
+    /** Basically, children is _always_  of type never
+     * 
+     *  So you can only call these components like so:
+     * 
+     *  ```javascript
+     *  // OK ✅
+     *  <Example
+     *     some_prop={'etc'}
+     *     {...other_props}
+     *  />
+     *  <Example some_prop={'etc'} {...other_props}></Example>
+     *  // ERROR ❌
+     *  <Example
+     *     some_prop={'etc'}
+     *     {...other_props}
+     *  >
+     *    <div>I will error! </div>
+     *  </Example>
+     *  // TSC will complain that type 'never[]' is not assignable to type 'undefined'
+     *  <Example
+     *     some_prop={'etc'}
+     *     {...other_props}
+     *  >
+     *
+     *  </Example>
+     *  ```
+     *
+     */
+    interface ChildlessFunctionComponent<P = {}> {
+        (props: PropsNoChildren<P>, context?: any): ReactElement<any, any> | null;
+        propTypes?: WeakValidationMap<P>;
+        contextTypes?: ValidationMap<any>;
+        defaultProps?: Partial<P>;
+        displayName?: string;
+    }
+
     type VFC<P = {}> = VoidFunctionComponent<P>;
 
     interface VoidFunctionComponent<P = {}> {
@@ -823,7 +870,8 @@ declare namespace React {
             : P;
 
     type PropsWithChildren<P> = P & { children?: ReactNode };
-
+    /** Ensures that a given component won't include children */
+    type PropsNoChildren<P> = P & { children?: never };
     /**
      * NOTE: prefer ComponentPropsWithRef, if the ref is forwarded,
      * or ComponentPropsWithoutRef when refs are not supported.
